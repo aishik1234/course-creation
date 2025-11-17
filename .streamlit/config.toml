@@ -1,0 +1,16 @@
+[theme]
+# Coursera-inspired theme colors
+primaryColor = "#1a73e8"  # Coursera blue
+backgroundColor = "#ffffff"  # White background
+secondaryBackgroundColor = "#f8f9fa"  # Light gray for cards/sidebar
+textColor = "#202124"  # Dark gray text
+font = "sans serif"
+
+[server]
+headless = false
+port = 8501
+enableXsrfProtection = true
+
+[browser]
+gatherUsageStats = false
+
