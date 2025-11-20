@@ -5,8 +5,6 @@ from typing import Dict, Any, List
 
 def render_module_structure_review(modules: List[Dict[str, Any]]):
     """Render module structure for review."""
-    st.markdown("### 📊 Module Structure Review")
-    
     for i, module in enumerate(modules, 1):
         with st.expander(f"Module {i}: {module.get('module_name', 'Untitled')}", expanded=True):
             st.markdown(f"**Duration:** {module.get('duration_allocation', 'N/A')}")
@@ -31,8 +29,6 @@ def render_module_structure_review(modules: List[Dict[str, Any]]):
 
 def render_content_review(lessons: List[Dict[str, Any]]):
     """Render lesson content for review."""
-    st.markdown("### 📚 Content Review")
-    
     for i, lesson in enumerate(lessons[:5], 1):  # Show first 5
         with st.expander(f"Lesson {i}: {lesson.get('lesson_name', 'Untitled')}", expanded=False):
             if lesson.get('introduction'):
@@ -49,8 +45,6 @@ def render_content_review(lessons: List[Dict[str, Any]]):
 
 def render_quiz_review(quizzes: List[Dict[str, Any]]):
     """Render quizzes for review."""
-    st.markdown("### 📝 Quiz Review")
-    
     graded = [q for q in quizzes if q.get('quiz_type') == 'graded']
     practice = [q for q in quizzes if q.get('quiz_type') == 'practice']
     

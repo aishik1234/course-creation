@@ -1,5 +1,6 @@
 """Streamlit UI for Course Builder - Coursera-like interface."""
 import streamlit as st
+from streamlit_autorefresh import st_autorefresh
 import json
 import sys
 import os
@@ -10,7 +11,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from main import run_course_builder, initialize_state
 from utils.results_saver import ResultsSaver
-from ui.progress_display import display_progress_ui
+from ui.progress_display import display_progress_ui, display_workflow_progress_bar
 from ui.real_time_updates import display_step_progress, display_content_as_ready
 
 
@@ -361,6 +362,9 @@ def display_quiz(quiz):
 
 def main():
     """Main Streamlit app."""
+    # Auto-refresh every 10 seconds
+    count = st_autorefresh(interval=10*1000, key="refresh_timer")
+    
     st.markdown('<h1 class="main-header">📚 AI Course Builder</h1>', unsafe_allow_html=True)
     
     # Sidebar for navigation
@@ -497,12 +501,9 @@ def main():
         thread_id = st.session_state.get('thread_id', 'default')
         saver = ResultsSaver()
         
-        # Add manual refresh button for interrupt detection
-        if st.session_state.get('workflow_running') and not st.session_state.get('workflow_complete'):
-            col1, col2 = st.columns([3, 1])
-            with col2:
-                if st.button("🔄 Check for Review", help="Click to check if review is needed"):
-                    st.rerun()
+        # Display workflow progress bar
+        if st.session_state.get('workflow_running') or st.session_state.get('workflow_complete'):
+            display_workflow_progress_bar(thread_id)
         
         interrupt_structure = saver.get_latest_result("interrupt_structure", thread_id)
         interrupt_content = saver.get_latest_result("interrupt_content", thread_id)
@@ -608,7 +609,7 @@ def main():
             # Check if we're waiting for feedback
             if active_interrupt:
                 st.warning("⏸️ **Workflow is paused waiting for your review!** Scroll up to see the review form and provide feedback.")
-                st.info("💡 **Tip:** If you don't see the review form above, click the '🔄 Check for Review' button or refresh the page (F5).")
+                st.info("💡 **Tip:** If you don't see the review form above, refresh the page (F5) or wait for auto-refresh.")
                 return
             
             thread_id = st.session_state.get('thread_id', 'default')
@@ -659,6 +660,9 @@ def main():
         
         thread_id = st.session_state.get('thread_id', 'default')
         saver = ResultsSaver()
+        
+        # Display workflow progress bar
+        display_workflow_progress_bar(thread_id)
         
         # Load course data
         module_structure = saver.get_latest_result("module_structure", thread_id)
