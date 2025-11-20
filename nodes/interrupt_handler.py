@@ -43,7 +43,7 @@ def get_interactive_feedback(interrupt_type: str, state: Dict[str, Any]) -> Dict
         time.sleep(check_interval)
         elapsed += check_interval
         if elapsed % 10 == 0:  # Print every 10 seconds
-            print(f"   Still waiting... ({elapsed}s elapsed)")
+            print(f"   [{thread_id}] Still waiting for {interrupt_type} feedback... ({elapsed}s elapsed)")
     
     # If no UI feedback after timeout, use CLI (for terminal-based execution)
     print(f"\n⏰ No UI feedback received after {max_wait_time}s. Using CLI input...")

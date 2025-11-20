@@ -44,9 +44,11 @@ def course_content_agent(state: CourseState) -> CourseState:
             progress.log_node_progress("course_content_agent", {
                 "message": "Regenerating course content with feedback"
             })
+            # Don't reset approval_status to None - keep it as False to indicate we're in regeneration cycle
+            # This prevents the review node from calling get_interactive_feedback() again
             if "approval_status" not in state:
                 state["approval_status"] = {}
-            state["approval_status"]["content"] = None
+            # Keep approval_status as False (don't reset to None) so review node knows we're regenerating
         else:
             progress.log_node_progress("course_content_agent", {
                 "message": "Creating course content"
@@ -237,6 +239,14 @@ Return JSON array with lesson objects, each containing:
         })
         
         state["current_step"] = "course_content_created"
+        
+        # After successful regeneration, reset approval_status to None
+        # This allows validation to determine next step, and if validation fails,
+        # the review node can get feedback on the regenerated version
+        if is_regeneration:
+            if "approval_status" not in state:
+                state["approval_status"] = {}
+            state["approval_status"]["content"] = None
         
     except Exception as e:
         error_msg = f"Course content agent error: {str(e)}"

@@ -460,7 +460,7 @@ def display_workflow_progress_bar(thread_id: str):
     
     with col2:
         st.metric("Progress", f"{percentage * 100:.1f}%")
-        st.caption(f"{completed}/{total_started} steps")
+        st.caption(f"{completed}/{total_possible} steps")
     
     # Detailed step list (collapsible)
     with st.expander("📋 View All Steps", expanded=False):

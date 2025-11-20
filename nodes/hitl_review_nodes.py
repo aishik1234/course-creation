@@ -75,7 +75,13 @@ def human_review_structure(state: CourseState) -> CourseState:
     _ensure_feedback_state(state, "structure")
     
     # Check if we already have feedback (resuming after interrupt)
-    if state["approval_status"].get("structure") is not None:
+    # Also check if we're in a regeneration cycle (approval_status is False means we rejected and are regenerating)
+    approval_status = state["approval_status"].get("structure")
+    if approval_status is not None:
+        # If it's False, we're in regeneration cycle - don't call get_interactive_feedback again
+        # The workflow will route based on validation results
+        if approval_status is False:
+            print(f"\n🔄 Structure was rejected and regenerated. Skipping review (validation will determine next step).\n")
         return state
     
     thread_id = state.get("course_metadata", {}).get("thread_id", "default")
@@ -103,7 +109,13 @@ def human_review_content(state: CourseState) -> CourseState:
     _ensure_feedback_state(state, "content")
     
     # Check if we already have feedback (resuming after interrupt)
-    if state["approval_status"].get("content") is not None:
+    # Also check if we're in a regeneration cycle (approval_status is False means we rejected and are regenerating)
+    approval_status = state["approval_status"].get("content")
+    if approval_status is not None:
+        # If it's False, we're in regeneration cycle - don't call get_interactive_feedback again
+        # The workflow will route based on validation results
+        if approval_status is False:
+            print(f"\n🔄 Content was rejected and regenerated. Skipping review (validation will determine next step).\n")
         return state
     
     thread_id = state.get("course_metadata", {}).get("thread_id", "default")
@@ -131,10 +143,16 @@ def human_review_quizzes(state: CourseState) -> CourseState:
     _ensure_feedback_state(state, "quizzes")
     
     # Check if we already have feedback (resuming after interrupt)
-    if state["approval_status"].get("quizzes") is not None:
-        # State already has approval status, routing function will determine next step
-        print(f"\n✅ Resuming after quiz review. Approval status: {state['approval_status'].get('quizzes')}")
-        print("   Routing to next step based on approval status...\n")
+    # Also check if we're in a regeneration cycle (approval_status is False means we rejected and are regenerating)
+    approval_status = state["approval_status"].get("quizzes")
+    if approval_status is not None:
+        # If it's False, we're in regeneration cycle - don't call get_interactive_feedback again
+        # The workflow will route based on validation results
+        if approval_status is False:
+            print(f"\n🔄 Quizzes were rejected and regenerated. Skipping review (validation will determine next step).\n")
+        else:
+            print(f"\n✅ Resuming after quiz review. Approval status: {approval_status}")
+            print("   Routing to next step based on approval status...\n")
         return state
     
     thread_id = state.get("course_metadata", {}).get("thread_id", "default")
