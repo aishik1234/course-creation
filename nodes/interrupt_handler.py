@@ -23,13 +23,13 @@ def get_interactive_feedback(interrupt_type: str, state: Dict[str, Any]) -> Dict
     feedback_file = f"course_outputs/{thread_id}_feedback_{interrupt_type}.json"
     
     # Poll for UI feedback file (for Streamlit UI)
-    # Check every 2 seconds, up to 60 seconds (1 minute) total - reduced for faster workflow
-    max_wait_time = 60
+    # Check every 2 seconds, up to 600 seconds (10 minutes) total - reduced for faster workflow
+    max_wait_time = 600
     check_interval = 2
     elapsed = 0
     
     print(f"\n⏸️  Waiting for {interrupt_type} review feedback...")
-    print(f"   (If using UI, please submit feedback within 60s. Otherwise, this will timeout and use CLI.)")
+    print(f"   (If using UI, please submit feedback within 600s (10 minutes). Otherwise, this will timeout and use CLI.)")
     
     while elapsed < max_wait_time:
         if os.path.exists(feedback_file):

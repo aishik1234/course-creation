@@ -969,44 +969,6 @@ def main():
                             st.markdown("### 📝 Quizzes")
                             for quiz in module_quizzes:
                                 display_quiz(quiz)
-            
-            # Show all lessons in one place if content is available
-            if content_data:
-                st.markdown("---")
-                st.markdown("## 📖 All Lessons (Complete Content)")
-                st.info("Browse all lessons from all modules below. Each lesson contains full content including introduction, main content, examples, exercises, and more.")
-                
-                # Group lessons by module for better organization
-                lessons_by_module = {}
-                for lesson in content_data:
-                    mod_id = lesson.get('module_id')
-                    if mod_id not in lessons_by_module:
-                        lessons_by_module[mod_id] = []
-                    lessons_by_module[mod_id].append(lesson)
-                
-                for mod_id, lessons in sorted(lessons_by_module.items()):
-                    # Find module and use XDP name if available
-                    module = next((m for m in modules_data if m.get('module_id') == mod_id), None)
-                    if module:
-                        module_name = module.get('xdp_module_name') or module.get('module_name', f'Module {mod_id}')
-                    else:
-                        module_name = f'Module {mod_id}'
-                    st.markdown(f"### 📦 {module_name} ({len(lessons)} lessons)")
-                    
-                    for lesson in lessons:
-                        lesson_name = lesson.get('lesson_name', lesson.get('title', 'Untitled Lesson'))
-                        lesson_id = lesson.get('lesson_id', '')
-                        # Find transcript for this lesson
-                        transcript = None
-                        for key, t in transcript_map.items():
-                            t_mod_id, lid, lname = key
-                            if (t_mod_id == mod_id and 
-                                (lid == lesson_id or lname == lesson_name)):
-                                transcript = t
-                                break
-                        
-                        with st.expander(f"📖 {lesson_name}", expanded=False):
-                            display_lesson_content(lesson, transcript)
     
 if __name__ == "__main__":
     main()
