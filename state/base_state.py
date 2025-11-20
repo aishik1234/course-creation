@@ -29,6 +29,7 @@ class CourseState(BaseState):
     xdp_content: Optional[Dict[str, Any]]  # XDP format specification
     course_content: Optional[List[Dict[str, Any]]]  # Full lesson content
     quizzes: Optional[List[Dict[str, Any]]]  # All quizzes (graded + practice)
+    video_transcripts: Optional[List[Dict[str, Any]]]  # Video transcripts for lessons
     
     # Validation & Control
     validation_results: Dict[str, Any]  # Scores and flags

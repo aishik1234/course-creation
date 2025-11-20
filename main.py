@@ -26,6 +26,7 @@ def initialize_state(user_input: dict, thread_id: str = "default") -> CourseStat
         xdp_content=None,
         course_content=None,
         quizzes=None,
+        video_transcripts=None,
         
         # Initialize control structures
         validation_results={},

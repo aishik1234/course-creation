@@ -251,9 +251,24 @@ def display_module_card(module, module_num):
     st.markdown("---")
 
 
-def display_lesson_content(lesson):
+def display_lesson_content(lesson, transcript=None):
     """Display detailed lesson content."""
     st.markdown(f"### {lesson.get('lesson_name', 'Untitled Lesson')}")
+    
+    # Video Transcript (show first if available)
+    if transcript or lesson.get('video_transcript'):
+        transcript_data = transcript or lesson.get('video_transcript')
+        if transcript_data and transcript_data.get('transcript'):
+            st.markdown("#### 🎥 Video Transcript")
+            duration = transcript_data.get('video_duration_minutes', 0)
+            word_count = transcript_data.get('word_count', 0)
+            
+            st.info(f"⏱️ **Duration:** {duration} minutes | 📝 **Words:** {word_count}")
+            
+            with st.expander("📄 View Full Transcript", expanded=False):
+                st.markdown(transcript_data['transcript'])
+            
+            st.markdown("---")
     
     # Introduction
     if lesson.get('introduction'):
@@ -651,6 +666,7 @@ def main():
         quizzes = saver.get_latest_result("quizzes", thread_id)
         final_course = saver.get_latest_result("final_course", thread_id)
         xdp_content = saver.get_latest_result("xdp_content", thread_id)
+        video_transcripts = saver.get_latest_result("video_transcripts", thread_id)
         
         if not module_structure:
             st.info("No course data found. Please create a course first.")
@@ -714,6 +730,27 @@ def main():
                         quizzes_data = data
                 elif isinstance(quizzes, list):
                     quizzes_data = quizzes
+            
+            # Handle video transcripts
+            transcripts_data = []
+            if video_transcripts:
+                if 'data' in video_transcripts:
+                    data = video_transcripts['data']
+                    if 'transcripts' in data:
+                        transcripts_data = data['transcripts']
+                    elif isinstance(data, list):
+                        transcripts_data = data
+                elif isinstance(video_transcripts, list):
+                    transcripts_data = video_transcripts
+            
+            # Create a mapping of lesson_id/module_id to transcript for quick lookup
+            transcript_map = {}
+            for transcript in transcripts_data:
+                lesson_id = transcript.get('lesson_id', '')
+                lesson_name = transcript.get('lesson_name', '')
+                module_id = transcript.get('module_id')
+                key = (module_id, lesson_id, lesson_name)
+                transcript_map[key] = transcript
             
             # Show debug info if content is missing
             if not content_data and course_content:
@@ -854,6 +891,26 @@ def main():
                 </div>
                 """, unsafe_allow_html=True)
             
+            # Add video transcripts statistics if available
+            if transcripts_data:
+                total_transcripts = len(transcripts_data)
+                total_video_duration = sum(t.get('video_duration_minutes', 0) for t in transcripts_data)
+                total_video_hours = round(total_video_duration / 60, 1)
+                
+                st.markdown("---")
+                st.markdown("### 🎥 Video Content")
+                transcript_cols = st.columns(3)
+                
+                with transcript_cols[0]:
+                    st.metric("Video Transcripts", total_transcripts)
+                
+                with transcript_cols[1]:
+                    st.metric("Total Video Duration", f"{total_video_hours} hours")
+                
+                with transcript_cols[2]:
+                    avg_duration = round(total_video_duration / total_transcripts, 1) if total_transcripts > 0 else 0
+                    st.metric("Average Duration", f"{avg_duration} min/lesson")
+            
             # Close the statistics card div
             st.markdown("</div>", unsafe_allow_html=True)
             
@@ -889,8 +946,18 @@ def main():
                             st.info(f"📖 {len(module_lessons)} lesson(s) available for this module. Click to expand and view full content.")
                             for lesson in module_lessons:
                                 lesson_name = lesson.get('lesson_name', lesson.get('title', 'Untitled Lesson'))
+                                lesson_id = lesson.get('lesson_id', '')
+                                # Find transcript for this lesson
+                                transcript = None
+                                for key, t in transcript_map.items():
+                                    mod_id, lid, lname = key
+                                    if (mod_id == module_id and 
+                                        (lid == lesson_id or lname == lesson_name)):
+                                        transcript = t
+                                        break
+                                
                                 with st.expander(f"📖 {lesson_name}", expanded=False):
-                                    display_lesson_content(lesson)
+                                    display_lesson_content(lesson, transcript)
                         elif content_data:
                             st.warning(f"⚠️ No lesson content found for Module {module_id}. Available lessons have module_ids: {list(set([l.get('module_id') for l in content_data[:10]]))}")
                         else:
@@ -928,8 +995,18 @@ def main():
                     
                     for lesson in lessons:
                         lesson_name = lesson.get('lesson_name', lesson.get('title', 'Untitled Lesson'))
+                        lesson_id = lesson.get('lesson_id', '')
+                        # Find transcript for this lesson
+                        transcript = None
+                        for key, t in transcript_map.items():
+                            t_mod_id, lid, lname = key
+                            if (t_mod_id == mod_id and 
+                                (lid == lesson_id or lname == lesson_name)):
+                                transcript = t
+                                break
+                        
                         with st.expander(f"📖 {lesson_name}", expanded=False):
-                            display_lesson_content(lesson)
+                            display_lesson_content(lesson, transcript)
     
 if __name__ == "__main__":
     main()

@@ -11,6 +11,7 @@ from agents.module_structure_agent import module_structure_agent
 from agents.xdp_agent import xdp_agent
 from agents.course_content_agent import course_content_agent
 from agents.quiz_curator_agent import quiz_curator_agent
+from agents.video_transcript_agent import video_transcript_agent
 from nodes.validation_agent import (
     validate_module_structure,
     validate_content,
@@ -107,13 +108,13 @@ def route_after_quiz_review(state: CourseState) -> Literal["approve", "reject", 
     print(f"   Feedback: {feedback[:50] if feedback else 'None'}...")
     
     if approval_status is True:
-        print("   → Routing to: finalize_course (approve)")
+        print("   → Routing to: video_transcript_agent (approve)")
         return "approve"
     elif approval_status is False or "reject" in feedback:
         print("   → Routing to: quiz_curator_agent (reject)")
         return "reject"  # Regenerate
     else:
-        print("   → Routing to: finalize_course (continue)")
+        print("   → Routing to: video_transcript_agent (continue)")
         return "continue"  # Use edited version
 
 
@@ -139,6 +140,7 @@ def create_course_builder_graph():
     workflow.add_node("validate_quizzes",
                      lambda state: update_validation_results(state, "quizzes", validate_quizzes))
     workflow.add_node("human_review_quizzes", human_review_quizzes)
+    workflow.add_node("video_transcript_agent", video_transcript_agent)
     workflow.add_node("finalize_course", finalize_course)
     
     # Set entry point
@@ -201,7 +203,7 @@ def create_course_builder_graph():
         "validate_quizzes",
         route_after_quiz_validation,
         {
-            "pass": "finalize_course",
+            "pass": "video_transcript_agent",
             "review": "human_review_quizzes"
         }
     )
@@ -211,12 +213,13 @@ def create_course_builder_graph():
         "human_review_quizzes",
         route_after_quiz_review,
         {
-            "approve": "finalize_course",
+            "approve": "video_transcript_agent",
             "reject": "quiz_curator_agent",
-            "continue": "finalize_course"
+            "continue": "video_transcript_agent"
         }
     )
     
+    workflow.add_edge("video_transcript_agent", "finalize_course")
     workflow.add_edge("finalize_course", END)
     
     # Compile graph with checkpointing and interrupts for HITL

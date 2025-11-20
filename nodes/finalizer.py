@@ -32,6 +32,17 @@ def finalize_course(state: CourseState) -> CourseState:
             "xdp_specification": state.get("xdp_content", {})
         }
         
+        # Helper function to get transcript for a lesson
+        def get_transcript_for_lesson(lesson_id, lesson_name, module_id):
+            """Get video transcript for a lesson."""
+            transcripts = state.get("video_transcripts", [])
+            for transcript in transcripts:
+                if (transcript.get("lesson_id") == lesson_id or 
+                    transcript.get("lesson_name") == lesson_name) and \
+                   transcript.get("module_id") == module_id:
+                    return transcript
+            return None
+        
         # Organize content by modules
         if state.get("module_structure") and state.get("course_content"):
             for module in state["module_structure"].get("modules", []):
@@ -41,17 +52,36 @@ def finalize_course(state: CourseState) -> CourseState:
                     if lesson.get("module_id") == module_id
                 ]
                 
+                # Add transcripts to lessons
+                lessons_with_transcripts = []
+                for lesson in module_lessons:
+                    lesson_id = lesson.get("lesson_id", "")
+                    lesson_name = lesson.get("lesson_name", "")
+                    transcript = get_transcript_for_lesson(lesson_id, lesson_name, module_id)
+                    
+                    lesson_with_transcript = {**lesson}
+                    if transcript:
+                        lesson_with_transcript["video_transcript"] = transcript
+                    lessons_with_transcripts.append(lesson_with_transcript)
+                
+                # Get all transcripts for this module
+                module_transcripts = [
+                    transcript for transcript in state.get("video_transcripts", [])
+                    if transcript.get("module_id") == module_id
+                ]
+                
                 module_data = {
                     "module_id": module_id,
                     "module_name": module.get("module_name"),
                     "module_objectives": module.get("module_objectives", []),
                     "duration_allocation": module.get("duration_allocation"),
                     "is_lab_module": module.get("is_lab_module", False),
-                    "lessons": module_lessons,
+                    "lessons": lessons_with_transcripts,
                     "quizzes": [
                         quiz for quiz in state.get("quizzes", [])
                         if quiz.get("module_id") == module_id
-                    ]
+                    ],
+                    "video_transcripts": module_transcripts
                 }
                 complete_course["modules"].append(module_data)
         
@@ -77,7 +107,12 @@ designed for {state['learner_level']} learners. The course is structured into
                 "total_lessons": len(state.get("course_content", [])),
                 "total_quizzes": len(state.get("quizzes", [])),
                 "graded_quizzes": len([q for q in state.get("quizzes", []) if q.get("quiz_type") == "graded"]),
-                "practice_quizzes": len([q for q in state.get("quizzes", []) if q.get("quiz_type") == "practice"])
+                "practice_quizzes": len([q for q in state.get("quizzes", []) if q.get("quiz_type") == "practice"]),
+                "total_video_transcripts": len(state.get("video_transcripts", [])),
+                "total_video_duration_minutes": sum(
+                    t.get("video_duration_minutes", 0) 
+                    for t in state.get("video_transcripts", [])
+                )
             },
             "export_format": complete_course  # JSON-ready structure
         }

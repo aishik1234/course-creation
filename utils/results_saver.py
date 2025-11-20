@@ -67,6 +67,10 @@ class ResultsSaver:
         """Save final course output."""
         return self.save_step_result("final_course", course_data, thread_id)
     
+    def save_video_transcripts(self, transcripts: List[Dict[str, Any]], thread_id: str = "default"):
+        """Save video transcripts to JSON file."""
+        return self.save_step_result("video_transcripts", {"transcripts": transcripts}, thread_id)
+    
     def save_interrupt_state(self, interrupt_type: str, state: Dict[str, Any], 
                            thread_id: str = "default"):
         """Save state when workflow is interrupted for human review."""
